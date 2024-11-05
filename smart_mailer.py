@@ -7,15 +7,13 @@ from email.mime.multipart import MIMEMultipart
 
 
 class SmartMailer:
-    def __init__(self, smtp_server, smtp_port, username, password):
+    def __init__(self, smtp_server, smtp_port, username, password, tracking_url):
         """Initialize mailer with SMTP server details"""
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
         self.username = username
         self.password = password
-        self.tracking_url = (
-            "http://your-domain.com/pixel.png"  # Replace with actual domain
-        )
+        self.tracking_url = tracking_url
 
     def read_csv_data(self, filename):
         """Read email data from CSV file"""
@@ -121,6 +119,7 @@ def main(
     password: str,
     csv_file: str,
     department: str,
+    url: str,
 ):
     # Initialize mailer
     mailer = SmartMailer(
@@ -128,6 +127,7 @@ def main(
         smtp_port=smtp_port,
         username=username,
         password=password,
+        tracking_url=url,
     )
 
     # Example usage
@@ -155,4 +155,5 @@ if __name__ == "__main__":
     password = input("Enter password: ")
     csv_file = input("Enter CSV file path: ")
     department = input("Enter department code or 'all': ")
-    main(smtp_server, smtp_port, username, password, csv_file, department)
+    url = input("Enter tracking URL: ")
+    main(smtp_server, smtp_port, username, password, csv_file, department, url)

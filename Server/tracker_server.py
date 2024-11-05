@@ -26,8 +26,8 @@ def init_tracking_db():
 def tracking_pixel():
     """Serve 1x1 transparent pixel and log access"""
     # Create a 1x1 transparent PNG
-    pixel = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x00\x00\x02\x00\x01\xe5\x27\xde\xfc\x00\x00\x00\x00IEND\xaeB`\x82"
-
+    with open("1x1.png", "rb") as f:
+        pixel = f.read()
     # Log the access
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -51,4 +51,4 @@ def get_stats():
 
 if __name__ == "__main__":
     init_tracking_db()
-    app.run(host="0.0.0.0", port=5010)
+    app.run(host="0.0.0.0", port=5182)
