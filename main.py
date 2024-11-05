@@ -163,7 +163,7 @@ class SmartMailer:
         return dept_stats
 
 
-def main():
+def main(smtp_server: str, smtp_port: int, username: str, password: str, csv_file: str):
     # Initialize tracking database
     init_tracking_db()
 
@@ -175,15 +175,15 @@ def main():
 
     # Initialize mailer
     mailer = SmartMailer(
-        smtp_server="smtp.gmail.com",
-        smtp_port=587,
-        username="your-email@gmail.com",  # Replace with actual email
-        password="your-password",  # Replace with actual password
+        smtp_server=smtp_server,
+        smtp_port=smtp_port,
+        username=username,  # Replace with actual email
+        password=password,  # Replace with actual password
     )
 
     # Example usage
     stats = mailer.send_bulk_mail(
-        csv_file="maildata.csv",
+        csv_file=csv_file,
         subject_file="subject.txt",
         body_file="body.html",
         department_code="IT",  # Or 'all' for all departments
@@ -200,4 +200,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    smtp_server = input("Enter SMTP server: ")
+    smtp_port = int(input("Enter SMTP port: "))
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+    csv_file = input("Enter CSV file path: ")
+    main(smtp_server, smtp_port, username, password, csv_file)
