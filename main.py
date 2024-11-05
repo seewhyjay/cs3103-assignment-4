@@ -75,14 +75,20 @@ class SmartMailer:
                 data.append(row)
         return data
 
-    def read_template(self, subject_file, body_file):
+    def read_template(self, filename):
+        """Read template file with UTF-8 encoding"""
+        try:
+            with open(filename, "r", encoding="utf-8") as file:
+                return file.read().strip()
+        except UnicodeDecodeError:
+            # If UTF-8 fails, try with utf-8-sig
+            with open(filename, "r", encoding="utf-8-sig") as file:
+                return file.read().strip()
+
+    def read_templates(self, subject_file, body_file):
         """Read email template from files"""
-        with open(subject_file, "r") as file:
-            subject = file.read().strip()
-
-        with open(body_file, "r") as file:
-            body = file.read().strip()
-
+        subject = self.read_template(subject_file)
+        body = self.read_template(body_file)
         return subject, body
 
     def personalize_content(self, template, replacements):
@@ -109,12 +115,11 @@ class SmartMailer:
         msg.attach(html_part)
 
         try:
-            print(msg)
-            # with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-            #     server.starttls()
-            #     server.login(self.username, self.password)
-            #     server.send_message(msg)
-            # return True
+            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                server.starttls()
+                server.login(self.username, self.password)
+                server.send_message(msg)
+            return True
         except Exception as e:
             print(f"Error sending to {to_email}: {str(e)}")
             return False
@@ -123,7 +128,7 @@ class SmartMailer:
         """Send bulk emails with department filtering"""
         # Read data and templates
         email_data = self.read_csv_data(csv_file)
-        subject_template, body_template = self.read_template(subject_file, body_file)
+        subject_template, body_template = self.read_templates(subject_file, body_file)
 
         # Initialize department statistics
         dept_stats = {}
