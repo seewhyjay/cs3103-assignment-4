@@ -7,13 +7,15 @@ from email.mime.multipart import MIMEMultipart
 
 
 class SmartMailer:
-    def __init__(self, smtp_server, smtp_port, username, password, tracking_url):
+    def __init__(self, smtp_server, smtp_port, username, password, tracking_url, batch_size=10, batch_delay=60):
         """Initialize mailer with SMTP server details"""
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
         self.username = username
         self.password = password
         self.tracking_url = tracking_url
+        self.batch_size = batch_size
+        self.batch_delay = batch_delay
 
     def read_csv_data(self, filename):
         """Read email data from CSV file"""
@@ -69,6 +71,9 @@ class SmartMailer:
                 server.login(self.username, self.password)
                 server.send_message(msg)
             return True
+        except smtplib.SMTPRecipientsRefused:
+            print(f"Bounce detected for {to_email}.")
+            return False
         except Exception as e:
             print(f"Error sending to {to_email}: {str(e)}")
             return False
@@ -81,6 +86,9 @@ class SmartMailer:
 
         # Initialize department statistics
         dept_stats = {}
+        
+        # To keep track of the number of emails sent in 1 batch
+        email_count = 0
 
         for entry in email_data:
             # Skip if department doesn't match (unless 'all' is specified)
@@ -96,6 +104,9 @@ class SmartMailer:
             success = self.send_email(
                 entry["email"], personalized_subject, tracked_body
             )
+            if (success):
+                cur_email = entry["email"]
+                print(f"Email successfully sent to {cur_email}")
 
             # Update statistics
             dept = entry["department"]
@@ -106,6 +117,12 @@ class SmartMailer:
             else:
                 dept_stats[dept]["failed"] += 1
 
+            # Increment email count and check for the batch limit
+            email_count += 1
+            if email_count % self.batch_size == 0:
+                print(f"Batch limit reached. Waiting for {self.batch_delay} seconds before continuing...")
+                time.sleep(self.batch_delay)
+            
             # Add random delay (2-5 seconds) to avoid spam detection
             time.sleep(random.uniform(2, 5))
 
@@ -120,6 +137,8 @@ def main(
     csv_file: str,
     department: str,
     url: str,
+    batch_size: int = 10,
+    batch_delay: int = 60
 ):
     # Initialize mailer
     mailer = SmartMailer(
@@ -128,6 +147,8 @@ def main(
         username=username,
         password=password,
         tracking_url=url,
+        batch_size=batch_size,
+        batch_delay=batch_delay
     )
 
     # Example usage
@@ -156,4 +177,6 @@ if __name__ == "__main__":
     csv_file = input("Enter CSV file path: ")
     department = input("Enter department code or 'all': ")
     url = input("Enter tracking URL: ")
-    main(smtp_server, smtp_port, username, password, csv_file, department, url)
+    batch_size = int(input("Enter batch size (e.g., 10): "))
+    batch_delay = int(input("Enter batch delay in seconds (e.g., 60): "))
+    main(smtp_server, smtp_port, username, password, csv_file, department, url, batch_size, batch_delay)
